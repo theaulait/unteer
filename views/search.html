@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<!--   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+  <script src="/jquery.js"></script>
+  <script src="/script.js"></script>
+<!--   <link rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous"> -->
+  <link rel="stylesheet" type="text/css" href="../public/style.css">
+<head>
+  <title>unteer2</title>
+</head>
+<body>
+  <div class="col-sm-3 col-md-3 pull-right">
+      <form action="/search" class="search" method="POST">
+                    <input type="text" class="form-control" placeholder="Keyword" name="q">
+                    <button id="btn_info" type="submit" action="submit">Search</button>
+      </form>
+  </div>
+
+<div id="custom-results">
+  {{#list}}
+  <h1>{{jobtitle}}</h1>
+  <h2>{{company}}</h2>
+  <p>{{description}}</p>
+  {{/list}}
+</div>
+
+</body>
+</html>
