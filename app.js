@@ -10,7 +10,6 @@ const port = process.env.PORT || 3000;
 const api = 'http://api.indeed.com/ads/apisearch?publisher=';
 const fetch = require("node-fetch");
 const necessary = '&userip=1.2.3.4&useragent=Mozilla/%2F4.0%28Firefox%29&v=2&format=json';
-//const pub = '5690837704127357&q=';
 var pub = process.env.PUB_ID;
 var theQuery;
 var intern = 'internship';
@@ -23,29 +22,88 @@ app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-
 var db = pgp(process.env.DATABASE_URL || 'postgres://MyRiceBowl@localhost:5432/unteer');
+app.use(session({
+  secret: 'getaInternship',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+//server is on
 app.listen(port, function(){
   console.log("logged in on " + port);
 });
-
+//rendering login/index page
 app.get('/', function(req, res){
       res.render('index');
   });
-
-app.get("/signup", function(req, res){
+// rendering sign up/create user page
+app.get('/signup', function(req, res){
   res.render('signup');
+});
+// rendering search
+app.get('/search', function(req, res){
+  res.render('search');
+});
+
+// rendering profile
+app.get('/user', function(req, res){
+  var user = {
+   name: req.session.user.name,
+   email: req.session.user.email
+ }
+  res.render('user', { user: user } );
+});
+
+// rendering update page
+app.put('/update', function(req, res){
+  db.one('SELECT * FROM users')
+  res.render('update');
 });
 
 
-app.put("/signup", function(req, res){
+app.post('/signup', function(req, res){
   var data = req.body;
-  db.none("INSERT INTO users VALUES($1, $2, $3)", [data.name,
-    data.password, data.email]).then(function(data){
-    res.render("user", {data: data})
-  });
-}); // end of app.put signup
+  bcrypt.hash(data.password, 10, function(err, hash){
+    db.none("INSERT INTO users(name, password, email) VALUES ($1, $2, $3)", [data.name, hash, data.email])
+    .catch(function(user){
+      res.send("Error could not create");
+    }).then(function(){
+    //  res.send("Users Created!");
+      res.redirect("/");
+     }); //end of then
+  });//end of bc
+}); // end of signup pass
 
+app.post('/login', function(req, res){
+  var data = req.body;
+  db.one("SELECT * FROM users WHERE email = $1", [data.email])
+    .catch(function(user){
+      res.send("Check email and/or password");
+    })
+    .then(function(user){
+        bcrypt.compare(data.password, user.password, function(err, cmp){
+          if(cmp){
+            req.session.user = user;
+            res.redirect("/user");
+          }else{
+            res.send("error");
+          }
+        });
+    });
+});
+
+
+// Update a user
+app.put('/update', function(req, res){
+  var data = req.body;
+});
+
+app.delete('/session', function(req, res){
+
+});
+
+// performing search
 app.post('/search', function(req, res){
     var keyword = req.body.q
         theQuery = frontUrl + keyword + backUrl;
@@ -63,6 +121,6 @@ app.post('/search', function(req, res){
         });
     });
       res.render('search', jobs)
-    }) // end of then
+    }); // end of then
 
  });//end of app.get search
